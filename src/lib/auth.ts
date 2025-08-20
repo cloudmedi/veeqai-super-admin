@@ -95,14 +95,14 @@ export class AuthService {
    */
   static async login(email: string, password: string): Promise<AuthResponse> {
     try {
-      const response = await adminApiClient.post<{accessToken: string, refreshToken: string, user: any}>('/login', { email, password })
+      const response = await adminApiClient.post<{accessToken: string, refreshToken: string, user: any}>('/auth/login', { email, password })
       
       if (response.accessToken && response.user) {
         const { accessToken, refreshToken, user } = response
         
-        // Verify super admin role
-        if (user.role !== 'superadmin') {
-          return { success: false, error: 'Access denied. Super admin only.' }
+        // Verify admin role (accept both admin and superadmin)
+        if (user.role !== 'admin' && user.role !== 'superadmin') {
+          return { success: false, error: 'Access denied. Admin only.' }
         }
         
         // Store tokens securely
