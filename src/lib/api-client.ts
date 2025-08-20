@@ -45,7 +45,7 @@ export class SuperAdminApiClient {
   private lastActivity: number = Date.now();
 
   constructor() {
-    this.baseURL = 'http://localhost:5000/api'; // Admin-specific base URL
+    this.baseURL = import.meta.env.VITE_API_BASE_URL ? `${import.meta.env.VITE_API_BASE_URL}/api` : 'http://localhost:5000/api'; // Admin-specific base URL
     this.timeout = 15000; // Longer timeout for admin operations
     this.enableLogging = import.meta.env.DEV; // Enable logging in development
     
