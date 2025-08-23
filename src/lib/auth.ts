@@ -20,6 +20,7 @@ export class AuthService {
   private static tokenKey = 'adminToken'
   private static refreshTokenKey = 'adminRefreshToken'
   private static userKey = 'adminUser'
+  private static refreshInterval: NodeJS.Timeout | null = null
 
   /**
    * Client-side token expiry validation (like frontend)
@@ -149,9 +150,16 @@ export class AuthService {
    * Logout and clear all stored data
    */
   static logout(): void {
+    // Clear stored data
     localStorage.removeItem(this.tokenKey)
     localStorage.removeItem(this.refreshTokenKey)
     localStorage.removeItem(this.userKey)
+    
+    // Clear refresh interval
+    if (this.refreshInterval) {
+      clearInterval(this.refreshInterval)
+      this.refreshInterval = null
+    }
     
     // Optional: Notify backend about logout
     adminApiClient.post('/auth/logout', {}).catch(() => {
@@ -224,12 +232,18 @@ export class AuthService {
    * Auto-refresh token periodically
    */
   static startTokenRefresh(): void {
+    // Clear existing interval to prevent duplicates
+    if (this.refreshInterval) {
+      clearInterval(this.refreshInterval)
+    }
+    
     // Verify token every 15 minutes like frontend
-    setInterval(async () => {
+    this.refreshInterval = setInterval(async () => {
       if (this.isAuthenticated()) {
         const result = await this.verifyToken()
         if (!result.success) {
-          window.location.href = '/login'
+          // Don't redirect during login flow - let components handle it
+          this.logout()
         }
       }
     }, 15 * 60 * 1000) // 15 minutes like frontend
